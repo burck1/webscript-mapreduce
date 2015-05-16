@@ -63,7 +63,7 @@ mapreduce.send_result = function (data)
     end
 end
 
-mapreduce.emit = function (key, value)
+mapreduce.emit = function (request, key, value)
     if string.find(storage["mapreduce:config:urls:map"], request.path) then
         lease.acquire("mapreduce:data:groups")
         local current_groups = json.parse(storage["mapreduce:data:groups"])
@@ -82,7 +82,7 @@ mapreduce.emit = function (key, value)
     end
 end
 
-mapreduce.continue = function ()
+mapreduce.continue = function (request)
     if string.find(storage["mapreduce:config:urls:map"], request.path) then
         lease.acquire("mapreduce:data:maptotal")
         local c = tonumber(storage["mapreduce:data:maptotal"]) + 1
@@ -107,11 +107,11 @@ mapreduce.continue = function ()
     end
 end
 
-mapreduce.key = function ()
+mapreduce.key = function (request)
     return request.query.key
 end
 
-mapreduce.value = function ()
+mapreduce.value = function (request)
     if string.find(storage["mapreduce:config:urls:reduce"], request.path) then
         return json.parse(request.body)
     else
@@ -119,7 +119,7 @@ mapreduce.value = function ()
     end
 end
 
-mapreduce.result = function ()
+mapreduce.result = function (request)
     return json.parse(request.body)
 end
 
