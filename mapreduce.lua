@@ -62,9 +62,10 @@ mapreduce.initiate = function (data)
                 }).done(function(result_data) {
                   console.log(key2 + " reduce done");
                   if (!$.isEmptyObject(result_data)) {
-                    var result_data_str = JSON.stringify(result_data);
+                    var result_data_str = JSON.stringify(result_data, undefined, 4);
                     $.ajax({
                       method: "POST",
+                      url: result_url,
                       data: result_data_str,
                       contentType: "text/plain",
                       processData: false
