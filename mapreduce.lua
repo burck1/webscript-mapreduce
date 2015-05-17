@@ -21,7 +21,9 @@ mapreduce.initiate = function (data)
 
     local data_html = ''
     for k,v in pairs(data) do
-        data_html = data_html..'"'..k..'":"'..v..'",'
+        local data_location = "mapreduce:data:map:"..k
+        storage[data_location] = v
+        data_html = data_html..'"'..k..'":"'..data_location..'",'
     end
 
     local html = [[<!DOCTYPE html>
@@ -31,7 +33,7 @@ mapreduce.initiate = function (data)
   </head>
   <body>
     <button id="go" type="button" class="pure-button pure-button-primary">GO</button>
-    <pre id="result"></pre>
+    <h2 id="result"></h2>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
     <script type="text/javascript">
     var map_url = "]]..storage["mapreduce:config:urls:map"]..[[";
@@ -56,24 +58,24 @@ mapreduce.initiate = function (data)
                 $.ajax({
                   method: "POST",
                   url: reduce_url + "?key=" + key2,
-                  data: JSON.stringify(value2),
+                  data: value2,
                   contentType: "text/plain",
                   processData: false,
-                  dataType: "json",
+                  dataType: "text",
                   timeout: 10000
                 }).done(function(result_data) {
                   console.log("reduce: " + key2);
-                  if (!$.isEmptyObject(result_data)) {
+                  if (result_data) {
                     $.ajax({
                       method: "POST",
                       url: result_url,
-                      data: JSON.stringify(result_data),
+                      data: result_data,
                       contentType: "text/plain",
                       processData: false,
                       timeout: 10000
                     }).done(function(){
                       console.log("results sent");
-                      $("#result").html(JSON.stringify(result_data, undefined, 4));
+                      $("#result").html("DONE");
                     });
                   }
                 }).fail(function(jqXHR, textStatus){
@@ -125,7 +127,13 @@ mapreduce.continue = function (request)
         if c == tonumber(storage["mapreduce:data:mapcount"]) then
             local groups = json.parse(storage["mapreduce:data:groups"])
             storage["mapreduce:data:reducecount"] = tablelength(groups)
-            return json.stringify(groups), {["Content-Type"]="application/json"}
+            local groups_locations = {}
+            for k,v in pairs(groups) do
+                local data_location = "mapreduce:data:reduce:"..k
+                storage[data_location] = json.stringify(v)
+                groups_locations[k] = data_location
+            end
+            return json.stringify(groups_locations), {["Content-Type"]="application/json"}
         else
             return "{}", {["Content-Type"]="application/json"}
         end
@@ -135,9 +143,9 @@ mapreduce.continue = function (request)
         storage["mapreduce:data:reducetotal"] = c
         lease.release("mapreduce:data:reducetotal")
         if c == tonumber(storage["mapreduce:data:reducecount"]) then
-            return storage["mapreduce:data:results"], {["Content-Type"]="application/json"}
+            return "mapreduce:data:results", {["Content-Type"]="text/plain"}
         else
-            return "{}", {["Content-Type"]="application/json"}
+            return "", {["Content-Type"]="text/plain"}
         end
     end
 end
@@ -147,15 +155,17 @@ mapreduce.key = function (request)
 end
 
 mapreduce.value = function (request)
-    if string.find(storage["mapreduce:config:urls:reduce"], request.path) then
-        return json.parse(request.body)
+    if string.find(storage["mapreduce:config:urls:map"], request.path) then
+        return storage[request.body]
+    elseif string.find(storage["mapreduce:config:urls:reduce"], request.path) then
+        return json.parse(storage[request.body])
     else
         return request.body
     end
 end
 
 mapreduce.result = function (request)
-    return json.parse(request.body)
+    return json.parse(storage[request.body])
 end
 
 
