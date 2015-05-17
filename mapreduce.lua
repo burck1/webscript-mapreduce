@@ -75,7 +75,7 @@ mapreduce.html = function (initiate_url)
       $.ajax({
         method: "GET",
         url: url,
-        dataType: "json"
+        dataType: "text"
       }).done(done).fail(fail).always(always);
     }
     function result(url, data, done, fail, always) {
