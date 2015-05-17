@@ -119,7 +119,15 @@ mapreduce.html = function (initiate_url)
               $.when.apply($, reduce_requests).done(allReducesDone).fail(allReducesDone);
             });
           }
-          $.when.apply($, map_requests).done(function(){console.log("DONE");}).fail(function(){console.log("FAIL");}).always(function(){console.log("ALWAYS");});
+          $.when.apply($, map_requests).done(function(){
+            console.log("DONE");
+          }).fail(function(){
+            console.log("FAIL");
+          }).always(function(){
+            console.log("ALWAYS");
+          }).progress(function(){
+            console.log("PROGRESS");
+          });
         });
       });
     });
