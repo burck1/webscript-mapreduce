@@ -1,9 +1,11 @@
 local mapreduce = require('burck1/webscript-mapreduce/mapreduce.lua')
 
 local get_words_count = function (line)
+    line = string.gsub(line, "[.,;:]", "")
+    line = string.lower(line)
     local counts = {}
     for w in line:gmatch("%S+") do
-        counts[string.lower(w)] = (counts[string.lower(w)] or 0) + 1
+        counts[w] = (counts[w] or 0) + 1
     end
     return counts
 end
