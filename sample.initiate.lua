@@ -1,5 +1,10 @@
 local mapreduce = require('burck1/webscript-mapreduce/mapreduce.lua')
 
+mapreduce.setup(
+    "http://backspace.webscript.io/map",
+    "http://backspace.webscript.io/reduce",
+    "http://backspace.webscript.io/result")
+
 local data = {}
 table.insert(data, "Bacon ipsum dolor amet fatback shank pastrami tail biltong kevin landjaeger jerky ham ribeye drumstick pork pig boudin. Meatloaf pork belly turkey shankle pork chop flank cow tri-tip pig short ribs ground round short loin. Andouille t-bone sausage pig chicken shoulder venison biltong strip steak flank. Bresaola doner ham hock pork loin. Corned beef pig prosciutto andouille meatloaf. Fatback porchetta venison drumstick bacon boudin turkey short loin corned beef pork strip steak pancetta. Fatback frankfurter ball tip boudin beef ribs tongue pork loin.")
 table.insert(data, "Bresaola meatloaf drumstick pork beef ribs flank strip steak. Fatback ham filet mignon sirloin landjaeger leberkas salami tenderloin jerky biltong rump cow. Salami landjaeger biltong, prosciutto cupim pork swine tail ball tip. Venison jowl rump, pork pork loin jerky ham hock strip steak t-bone. Filet mignon corned beef frankfurter meatloaf pork belly leberkas. Boudin alcatra hamburger shoulder strip steak short ribs tenderloin ball tip chuck pork chop sausage pork loin porchetta.")
@@ -52,9 +57,4 @@ table.insert(data, "Swine jerky tri-tip, pork belly chicken beef meatloaf pancet
 table.insert(data, "Tri-tip corned beef shankle t-bone short loin. Andouille pig boudin sausage jowl cupim shank. Pastrami picanha tri-tip beef shankle, drumstick cupim porchetta salami chuck brisket spare ribs shank alcatra tenderloin. Pancetta rump ham fatback frankfurter capicola ham hock. Boudin turducken tongue cow short ribs strip steak prosciutto landjaeger capicola pig sausage.")
 table.insert(data, "Pork turducken strip steak, salami landjaeger t-bone tenderloin capicola ribeye kevin pig chuck andouille. Pancetta frankfurter pork tongue rump. Frankfurter sausage rump, cow bresaola prosciutto venison boudin. Beef tenderloin pork swine venison capicola, beef ribs alcatra. Ham swine fatback landjaeger bacon andouille, venison capicola drumstick jowl tongue. Shoulder meatball short loin venison. Swine doner andouille, prosciutto ball tip cupim ribeye salami bacon.")
 
-
-mapreduce.setup(
-    "http://backspace.webscript.io/map",
-    "http://backspace.webscript.io/reduce",
-    "http://backspace.webscript.io/result")
 return mapreduce.initiate(data)

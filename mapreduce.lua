@@ -16,16 +16,7 @@ mapreduce.setup = function (map_url, reduce_url, result_url)
     storage["mapreduce:data:results"] = json.stringify({})
 end
 
-mapreduce.initiate = function (data)
-    storage["mapreduce:data:mapcount"] = tablelength(data)
-
-    local data_html = ''
-    for k,v in pairs(data) do
-        local data_location = "mapreduce:data:map:"..k
-        storage[data_location] = v
-        data_html = data_html..'"'..k..'":"'..data_location..'",'
-    end
-
+mapreduce.html = function (initiate_url)
     local html = [[<!DOCTYPE html>
 <html>
   <head>
@@ -36,57 +27,58 @@ mapreduce.initiate = function (data)
     <h2 id="result"></h2>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
     <script type="text/javascript">
-    var map_url = "]]..storage["mapreduce:config:urls:map"]..[[";
-    var reduce_url = "]]..storage["mapreduce:config:urls:reduce"]..[[";
-    var result_url = "]]..storage["mapreduce:config:urls:result"]..[[";
-    var map_data = {]]..data_html..[[};
+    var initiate_url = "]]..initiate_url..[[";
     $(function() {
       $("#go").click(function() {
-        $.each(map_data, function(key, value) {
-          $.ajax({
-            method: "POST",
-            url: map_url + "?key=" + key,
-            data: value,
-            contentType: "text/plain",
-            processData: false,
-            dataType: "json"
-          }).done(function(reduce_data) {
-            console.log("map: " + key);
-            if (!$.isEmptyObject(reduce_data)) {
-              $.each(reduce_data, function(key2, value2) {
-                $.ajax({
-                  method: "POST",
-                  url: reduce_url + "?key=" + key2,
-                  data: value2,
-                  contentType: "text/plain",
-                  processData: false,
-                  dataType: "text"
-                }).done(function(result_data) {
-                  console.log("reduce: " + key2);
-                  if (result_data) {
-                    $.ajax({
-                      method: "POST",
-                      url: result_url,
-                      data: result_data,
-                      contentType: "text/plain",
-                      processData: false
-                    }).done(function(){
-                      console.log("results sent");
-                      $("#result").html("DONE");
-                    });
-                  }
-                }).fail(function(jqXHR, textStatus){
-                  if(textStatus === 'timeout') {
+        $.ajax({
+          method: "GET",
+          url: initiate_url,
+          dataType: "json"
+        }).done(function(initiate_data) {
+          $.each(initiate_data["data"], function(key, value) {
+            $.ajax({
+              method: "POST",
+              url: initiate_data["links"]["map"] + "?key=" + key,
+              data: value,
+              contentType: "text/plain",
+              processData: false,
+              dataType: "json"
+            }).done(function(reduce_data) {
+              console.log("map: " + key);
+              if (!$.isEmptyObject(reduce_data)) {
+                $.each(reduce_data, function(key2, value2) {
+                  $.ajax({
+                    method: "POST",
+                    url: initiate_data["links"]["reduce"] + "?key=" + key2,
+                    data: value2,
+                    contentType: "text/plain",
+                    processData: false,
+                    dataType: "text"
+                  }).done(function(result_data) {
+                    console.log("reduce: " + key2);
+                    if (result_data) {
+                      $.ajax({
+                        method: "POST",
+                        url: initiate_data["links"]["result"],
+                        data: result_data,
+                        contentType: "text/plain",
+                        processData: false
+                      }).done(function(){
+                        console.log("results sent");
+                        $("#result").html("DONE");
+                      });
+                    }
+                  }).fail(function(jqXHR, textStatus){
                     console.log("Error: reduce: " + key2 + ": " + textStatus);
-                  }
+                  });
                 });
-              });
-            }
-          }).fail(function(jqXHR, textStatus){
-            if(textStatus === 'timeout') {
+              }
+            }).fail(function(jqXHR, textStatus){
               console.log("Error: map: " + key + ": " + textStatus);
-            }
+            });
           });
+        }).fail(function(jqXHR, textStatus){
+          console.log("Error: initiate: " + textStatus);
         });
       });
     });
@@ -94,6 +86,26 @@ mapreduce.initiate = function (data)
   </body>
 </html>]]
     return html, {["Content-Type"]="text/html"}
+end
+
+mapreduce.initiate = function (data)
+    storage["mapreduce:data:mapcount"] = tablelength(data)
+
+    local response = {}
+
+    response["links"] = {}
+    response["links"]["map"] = storage["mapreduce:config:urls:map"]
+    response["links"]["reduce"] = storage["mapreduce:config:urls:reduce"]
+    response["links"]["result"] = storage["mapreduce:config:urls:result"]
+
+    response["data"] = {}
+    for k,v in pairs(data) do
+        local data_location = "mapreduce:data:map:"..k
+        storage[data_location] = v
+        response["data"][k] = data_location
+    end
+
+    return json.stringify(response), {["Content-Type"]="application/json"}
 end
 
 mapreduce.emit = function (request, key, value)
