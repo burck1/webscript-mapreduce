@@ -57,9 +57,9 @@ mapreduce.send_result = function (data)
         data = data
     }
     if response.statuscode == 200 then
-        log(k.." done")
+        log("send result done")
     else
-        log(k.." failed to send result")
+        log("send result failed")
     end
 end
 
