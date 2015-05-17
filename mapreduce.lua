@@ -141,11 +141,11 @@ mapreduce.html = function (initiate_url)
           waitAllMapped(function() {
             mapresults(initiate_data["links"]["mapresults"], function(reduce_data) {
               $.each(reduce_data, function(key2, value2) {
-                reduced[key] = false;
+                reduced[key2] = false;
                 reduce(initiate_data["links"]["reduce"], key2, value2, function() {
                   console.log("reduce: " + key2);
                 }, undefined, function(){
-                  reduced[key] = true;
+                  reduced[key2] = true;
                 });
               });
               waitAllReduced(function() {
