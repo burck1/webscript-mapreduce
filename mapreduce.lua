@@ -49,8 +49,7 @@ mapreduce.initiate = function (data)
             data: value,
             contentType: "text/plain",
             processData: false,
-            dataType: "json",
-            timeout: 10000
+            dataType: "json"
           }).done(function(reduce_data) {
             console.log("map: " + key);
             if (!$.isEmptyObject(reduce_data)) {
@@ -61,8 +60,7 @@ mapreduce.initiate = function (data)
                   data: value2,
                   contentType: "text/plain",
                   processData: false,
-                  dataType: "text",
-                  timeout: 10000
+                  dataType: "text"
                 }).done(function(result_data) {
                   console.log("reduce: " + key2);
                   if (result_data) {
@@ -71,8 +69,7 @@ mapreduce.initiate = function (data)
                       url: result_url,
                       data: result_data,
                       contentType: "text/plain",
-                      processData: false,
-                      timeout: 10000
+                      processData: false
                     }).done(function(){
                       console.log("results sent");
                       $("#result").html("DONE");
@@ -80,14 +77,14 @@ mapreduce.initiate = function (data)
                   }
                 }).fail(function(jqXHR, textStatus){
                   if(textStatus === 'timeout') {
-                    console.log("Timeout: reduce: " + key2);
+                    console.log("Error: reduce: " + key2 + ": " + textStatus);
                   }
                 });
               });
             }
           }).fail(function(jqXHR, textStatus){
             if(textStatus === 'timeout') {
-              console.log("Timeout: map: " + key);
+              console.log("Error: map: " + key + ": " + textStatus);
             }
           });
         });
