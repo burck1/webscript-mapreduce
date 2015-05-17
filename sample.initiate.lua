@@ -2,7 +2,9 @@ local mapreduce = require('burck1/webscript-mapreduce/mapreduce.lua')
 
 mapreduce.setup(
     "http://backspace.webscript.io/map",
+    "http://backspace.webscript.io/map/results",
     "http://backspace.webscript.io/reduce",
+    "http://backspace.webscript.io/reduce/results",
     "http://backspace.webscript.io/result")
 
 local data = {}

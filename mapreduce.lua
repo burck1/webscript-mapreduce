@@ -6,9 +6,11 @@ end
 
 local mapreduce = {}
 
-mapreduce.setup = function (map_url, reduce_url, result_url)
+mapreduce.setup = function (map_url, mapresults_url, reduce_url, reduceresults_url, result_url)
     storage["mapreduce:config:urls:map"] = map_url
+    storage["mapreduce:config:urls:mapresults"] = mapresults_url
     storage["mapreduce:config:urls:reduce"] = reduce_url
+    storage["mapreduce:config:urls:reduceresults"] = reduceresults_url
     storage["mapreduce:config:urls:result"] = result_url
     storage["mapreduce:data:maptotal"] = 0
     storage["mapreduce:data:reducetotal"] = 0
@@ -27,58 +29,135 @@ mapreduce.html = function (initiate_url)
     <h2 id="result"></h2>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
     <script type="text/javascript">
+    function initiate(url, done, fail, always) {
+      fail = typeof fail !== 'undefined' ? fail : function(jqXHR, textStatus){console.log("Error: initiate: "+textStatus);};
+      always = typeof always !== 'undefined' ? always : function(){};
+      $.ajax({
+        method: "GET",
+        url: url,
+        dataType: "json"
+      }).done(done).fail(fail).always(always);
+    }
+    function map(url, key, value, done, fail, always) {
+      fail = typeof fail !== 'undefined' ? fail : function(jqXHR, textStatus){console.log("Error: map: "+key+": "+textStatus);};
+      always = typeof always !== 'undefined' ? always : function(){};
+      $.ajax({
+        method: "POST",
+        url: url + "?key=" + key,
+        data: value,
+        contentType: "text/plain",
+        processData: false,
+        dataType: "json"
+      }).done(done).fail(fail).always(always);
+    }
+    function mapresults(url, done, fail, always) {
+      fail = typeof fail !== 'undefined' ? fail : function(jqXHR, textStatus){console.log("Error: mapresults: "+textStatus);};
+      always = typeof always !== 'undefined' ? always : function(){};
+      $.ajax({
+        method: "GET",
+        url: url,
+        dataType: "json"
+      }).done(done).fail(fail).always(always);
+    }
+    function reduce(url, key, value, done, fail, always) {
+      fail = typeof fail !== 'undefined' ? fail : function(jqXHR, textStatus){console.log("Error: reduce: "+key+": "+textStatus);};
+      always = typeof always !== 'undefined' ? always : function(){};
+      $.ajax({
+        method: "POST",
+        url: url + "?key=" + key,
+        data: value,
+        contentType: "text/plain",
+        processData: false,
+        dataType: "text"
+      }).done(done).fail(fail).always(always);
+    }
+    function reduceresults(url, done, fail, always) {
+      fail = typeof fail !== 'undefined' ? fail : function(jqXHR, textStatus){console.log("Error: reduceresults: "+textStatus);};
+      always = typeof always !== 'undefined' ? always : function(){};
+      $.ajax({
+        method: "GET",
+        url: url,
+        dataType: "json"
+      }).done(done).fail(fail).always(always);
+    }
+    function result(url, data, done, fail, always) {
+      fail = typeof fail !== 'undefined' ? fail : function(jqXHR, textStatus){console.log("Error: result: "+textStatus);};
+      always = typeof always !== 'undefined' ? always : function(){};
+      $.ajax({
+        method: "POST",
+        url: url,
+        data: data,
+        contentType: "text/plain",
+        processData: false,
+        dataType: "json"
+      }).done(done).fail(fail).always(always);
+    }
+    var mapped = {};
+    var reduced = {};
+    var mappedIntervId;
+    var reducedIntervId;
+    function waitAllMapped(callback) {
+      mappedIntervId = setInterval(function() {
+        if (allTrue(mapped)) {
+          stopMapped();
+          callback();
+        }
+      }, 1000);
+    }
+    function stopMapped() {
+      clearInterval(mappedIntervId);
+    }
+    function waitAllReduced(callback) {
+      reducedIntervId = setInterval(function() {
+        if (allTrue(reduced)) {
+          stopReduced();
+          callback();
+        }
+      }, 1000);
+    }
+    function stopReduced() {
+      clearInterval(reducedIntervId);
+    }
+    function allTrue(obj) {
+      $.each(obj, function(k, v) {
+        if (!v) {
+          return false;
+        }
+      });
+      return true;
+    }
     var initiate_url = "]]..initiate_url..[[";
     $(function() {
       $("#go").click(function() {
-        $.ajax({
-          method: "GET",
-          url: initiate_url,
-          dataType: "json"
-        }).done(function(initiate_data) {
+        initiate(initiate_url, function(initiate_data) {
           $.each(initiate_data["data"], function(key, value) {
-            $.ajax({
-              method: "POST",
-              url: initiate_data["links"]["map"] + "?key=" + key,
-              data: value,
-              contentType: "text/plain",
-              processData: false,
-              dataType: "json"
-            }).done(function(reduce_data) {
+            mapped[key] = false;
+            map(initiate_data["links"]["map"], key, value, function(){
               console.log("map: " + key);
-              if (!$.isEmptyObject(reduce_data)) {
-                $.each(reduce_data, function(key2, value2) {
-                  $.ajax({
-                    method: "POST",
-                    url: initiate_data["links"]["reduce"] + "?key=" + key2,
-                    data: value2,
-                    contentType: "text/plain",
-                    processData: false,
-                    dataType: "text"
-                  }).done(function(result_data) {
-                    console.log("reduce: " + key2);
-                    if (result_data) {
-                      $.ajax({
-                        method: "POST",
-                        url: initiate_data["links"]["result"],
-                        data: result_data,
-                        contentType: "text/plain",
-                        processData: false
-                      }).done(function(){
-                        console.log("results sent");
-                        $("#result").html("DONE");
-                      });
-                    }
-                  }).fail(function(jqXHR, textStatus){
-                    console.log("Error: reduce: " + key2 + ": " + textStatus);
-                  });
-                });
-              }
-            }).fail(function(jqXHR, textStatus){
-              console.log("Error: map: " + key + ": " + textStatus);
+            }, undefined, function(){
+              mapped[key] = true;
             });
           });
-        }).fail(function(jqXHR, textStatus){
-          console.log("Error: initiate: " + textStatus);
+          waitAllMapped(function() {
+            mapresults(initiate_data["links"]["mapresults"], function(reduce_data) {
+              $.each(reduce_data, function(key2, value2) {
+                reduced[key] = false;
+                reduce(initiate_data["links"]["reduce"], key2, value2, function() {
+                  console.log("reduce: " + key2);
+                }, undefined, function(){
+                  reduced[key] = true;
+                });
+              });
+              waitAllReduced(function() {
+                reduceresults(initiate_data["links"]["reduceresults"], function(result_data) {
+                  result(initiate_data["links"]["result"], result_data, function(results){
+                    console.log("results sent");
+                    $("#result").html(JSON.stringify(results, undefined, 4));
+                  });
+                });
+              });
+            });
+          });
         });
       });
     });
@@ -95,7 +174,9 @@ mapreduce.initiate = function (data)
 
     response["links"] = {}
     response["links"]["map"] = storage["mapreduce:config:urls:map"]
+    response["links"]["mapresults"] = storage["mapreduce:config:urls:mapresults"]
     response["links"]["reduce"] = storage["mapreduce:config:urls:reduce"]
+    response["links"]["reduceresults"] = storage["mapreduce:config:urls:reduceresults"]
     response["links"]["result"] = storage["mapreduce:config:urls:result"]
 
     response["data"] = {}
@@ -142,38 +223,6 @@ end
 mapreduce.reduceresults = function()
     return "mapreduce:data:results", {["Content-Type"]="text/plain"}
 end
-
--- mapreduce.continue = function (request)
---     if string.find(storage["mapreduce:config:urls:map"], request.path) then
---         lease.acquire("mapreduce:data:maptotal")
---         local c = tonumber(storage["mapreduce:data:maptotal"]) + 1
---         storage["mapreduce:data:maptotal"] = c
---         lease.release("mapreduce:data:maptotal")
---         if c == tonumber(storage["mapreduce:data:mapcount"]) then
---             local groups = json.parse(storage["mapreduce:data:groups"])
---             storage["mapreduce:data:reducecount"] = tablelength(groups)
---             local groups_locations = {}
---             for k,v in pairs(groups) do
---                 local data_location = "mapreduce:data:reduce:"..k
---                 storage[data_location] = json.stringify(v)
---                 groups_locations[k] = data_location
---             end
---             return json.stringify(groups_locations), {["Content-Type"]="application/json"}
---         else
---             return "{}", {["Content-Type"]="application/json"}
---         end
---     elseif string.find(storage["mapreduce:config:urls:reduce"], request.path) then
---         lease.acquire("mapreduce:data:reducetotal")
---         local c = tonumber(storage["mapreduce:data:reducetotal"]) + 1
---         storage["mapreduce:data:reducetotal"] = c
---         lease.release("mapreduce:data:reducetotal")
---         if c == tonumber(storage["mapreduce:data:reducecount"]) then
---             return "mapreduce:data:results", {["Content-Type"]="text/plain"}
---         else
---             return "", {["Content-Type"]="text/plain"}
---         end
---     end
--- end
 
 mapreduce.key = function (request)
     return request.query.key
