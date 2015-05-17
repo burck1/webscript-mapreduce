@@ -96,37 +96,31 @@ mapreduce.html = function (initiate_url)
         initiate(initiate_url, function(initiate_data) {
           var map_requests = Array();
           $.each(initiate_data["data"], function(key, value) {
-            map_requests.push(map(initiate_data["links"]["map"], key, value, function(){
+            var d = $.Deferred();
+            map(initiate_data["links"]["map"], key, value, function(){
               console.log("map: " + key);
-            }));
+            }, undefined, function() { d.resolve(); });
+            map_requests.push(d);
           });
-          function allMapsDone() {
+          $.when.apply($, map_requests).always(function() {
             mapresults(initiate_data["links"]["mapresults"], function(reduce_data) {
               var reduce_requests = Array();
               $.each(reduce_data, function(key2, value2) {
-                reduce_requests.push(reduce(initiate_data["links"]["reduce"], key2, value2, function() {
+                var d2 = $.Deferred();
+                reduce(initiate_data["links"]["reduce"], key2, value2, function() {
                   console.log("reduce: " + key2);
-                }));
+                }, undefined, function() { d2.resolve(); });
+                reduce_requests.push();
               });
-              function allReducesDone() {
+              $.when.apply($, reduce_requests).always(function() {
                 reduceresults(initiate_data["links"]["reduceresults"], function(result_data) {
                   result(initiate_data["links"]["result"], result_data, function(results){
                     console.log("results sent");
                     $("#result").html(JSON.stringify(results, undefined, 4));
                   });
                 });
-              }
-              $.when.apply($, reduce_requests).done(allReducesDone).fail(allReducesDone);
+              });
             });
-          }
-          $.when.apply($, map_requests).done(function(){
-            console.log("DONE");
-          }).fail(function(){
-            console.log("FAIL");
-          }).always(function(){
-            console.log("ALWAYS");
-          }).progress(function(){
-            console.log("PROGRESS");
           });
         });
       });
