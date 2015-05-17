@@ -100,7 +100,7 @@ mapreduce.html = function (initiate_url)
               console.log("map: " + key);
             }));
           });
-          $.when.apply($, map_requests).done(function() {
+          $.when.apply($, map_requests).always(function() {
             mapresults(initiate_data["links"]["mapresults"], function(reduce_data) {
               var reduce_requests = Array();
               $.each(reduce_data, function(key2, value2) {
@@ -108,7 +108,7 @@ mapreduce.html = function (initiate_url)
                   console.log("reduce: " + key2);
                 }));
               });
-              $.when.apply($, reduce_requests).done(function() {
+              $.when.apply($, reduce_requests).always(function() {
                 reduceresults(initiate_data["links"]["reduceresults"], function(result_data) {
                   result(initiate_data["links"]["result"], result_data, function(results){
                     console.log("results sent");
