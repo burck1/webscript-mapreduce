@@ -20,16 +20,30 @@ local mapreduce = require('burck1/webscript-mapreduce/mapreduce.lua')
 
 ## API Reference
 
-### `mapreduce.setup(map_url, reduce_url, result_url)`
+```lua
+mapreduce.setup(map_url, reduce_url, result_url)
+```
 
-### `mapreduce.map(data)`
+```lua
+mapreduce.map(data)
+```
 
-### `local key = mapreduce.key(request)`
+```lua
+local key = mapreduce.key(request)
+```
 
-### `local value = mapreduce.value(request)`
+```lua
+local value = mapreduce.value(request)
+```
 
-### `mapreduce.emit(request, key2, value2)`
+```lua
+mapreduce.emit(request, key2, value2)
+```
 
-### `mapreduce.continue(request)`
+```lua
+mapreduce.continue(request)
+```
 
-### `local result = mapreduce.result(request)`
+```lua
+local result = mapreduce.result(request)
+```
