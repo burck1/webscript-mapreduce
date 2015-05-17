@@ -16,51 +16,69 @@ mapreduce.setup = function (map_url, reduce_url, result_url)
     storage["mapreduce:data:results"] = json.stringify({})
 end
 
-mapreduce.map = function (data)
+mapreduce.initiate = function (data)
     storage["mapreduce:data:mapcount"] = tablelength(data)
-    for k,v in pairs(data) do
-        local response = http.request {
-            method = "POST",
-            url = storage["mapreduce:config:urls:map"],
-            params = { key = k },
-            data = v
-        }
-        if response.statuscode == 200 then
-            log(k.." mapped")
-        else
-            log(k.." failed to map")
-        end
-    end
-end
 
-mapreduce.reduce = function (data)
-    storage["mapreduce:data:reducecount"] = tablelength(data)
+    local data_html = ''
     for k,v in pairs(data) do
-        local response = http.request {
-            method = "POST",
-            url = storage["mapreduce:config:urls:reduce"],
-            params = { key = k },
-            data = v
-        }
-        if response.statuscode == 200 then
-            log("reduce done")
-        else
-            log("reduce done: failed to send result")
-        end
+        data_html = data_html..'"'..k..'":"'..v..'",'
     end
-end
 
-mapreduce.send_result = function (data)
-    local response = http.request {
-        method = "POST",
-        url = storage["mapreduce:config:urls:result"],
-        data = data
-    }
-    if response.statuscode == 200 then
-        log("send result done")
-    else
-        log("send result failed")
-    end
+    local html = '
+<!DOCTYPE html>
+<html>
+  <body>
+    <button id="go" type="button"></button>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+    <script type="text/javascript">
+    var map_url = "'..storage["mapreduce:config:urls:map"]..'";
+    var reduce_url = "'..storage["mapreduce:config:urls:reduce"]..'";
+    var result_url = "'..storage["mapreduce:config:urls:result"]..'";
+    var map_data = {'..data_html..'};
+    $(function() {
+      $("#go").click(function() {
+        $.each(map_data, function(key, value) {
+          $.ajax({
+            method: "POST",
+            url: map_url + "?key=" + key,
+            data: value,
+            contentType: "text/plain",
+            processData: false,
+            dataType: "json"
+          }).done(function(reduce_data) {
+            console.log(key + " map done");
+            if (!$.isEmptyObject(reduce_data)) {
+              $.each(reduce_data, function(key2, value2) {
+                $.ajax({
+                  method: "POST",
+                  url: reduce_url + "?key=" + key2,
+                  data: JSON.stringify(value2),
+                  contentType: "text/plain",
+                  processData: false,
+                  dataType: "json"
+                }).done(function(result_data) {
+                  console.log(key2 + " reduce done");
+                  if (!$.isEmptyObject(result_data)) {
+                    $.ajax({
+                      method: "POST",
+                      data: JSON.stringify(result_data),
+                      contentType: "text/plain",
+                      processData: false
+                    }).done(function(){
+                      console.log("results sent");
+                    });
+                  }
+                });
+              });
+            }
+          });
+        });
+      });
+    });
+    </script>
+  </body>
+</html>'
+    return html, {["Content-Type"]="text/html"}
 end
 
 mapreduce.emit = function (request, key, value)
@@ -90,11 +108,10 @@ mapreduce.continue = function (request)
         lease.release("mapreduce:data:maptotal")
         if c == tonumber(storage["mapreduce:data:mapcount"]) then
             local groups = json.parse(storage["mapreduce:data:groups"])
-            local ser_groups = {}
-            for k,v in pairs(groups) do
-                ser_groups[k] = json.stringify(v)
-            end
-            mapreduce.reduce(ser_groups)
+            storage["mapreduce:data:reducecount"] = tablelength(groups)
+            return json.stringify(groups), {["Content-Type"]="application/json"}
+        else
+            return "{}", {["Content-Type"]="application/json"}
         end
     elseif string.find(storage["mapreduce:config:urls:reduce"], request.path) then
         lease.acquire("mapreduce:data:reducetotal")
@@ -102,7 +119,9 @@ mapreduce.continue = function (request)
         storage["mapreduce:data:reducetotal"] = c
         lease.release("mapreduce:data:reducetotal")
         if c == tonumber(storage["mapreduce:data:reducecount"]) then
-            mapreduce.send_result(storage["mapreduce:data:results"])
+            return storage["mapreduce:data:results"], {["Content-Type"]="application/json"}
+        else
+            return "{}", {["Content-Type"]="application/json"}
         end
     end
 end

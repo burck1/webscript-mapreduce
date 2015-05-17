@@ -16,4 +16,4 @@ for word,count in pairs(counts) do
     mapreduce.emit(request, word, count)
 end
 
-mapreduce.continue(request)
+return mapreduce.continue(request)
