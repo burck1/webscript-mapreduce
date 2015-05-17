@@ -26,8 +26,11 @@ mapreduce.initiate = function (data)
 
     local html = [[<!DOCTYPE html>
 <html>
+  <head>
+    <link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/pure/0.6.0/buttons-min.css">
+  </head>
   <body>
-    <button id="go" type="button"></button>
+    <button id="go" type="button" class="pure-button pure-button-primary">GO</button>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
     <script type="text/javascript">
     var map_url = "]]..storage["mapreduce:config:urls:map"]..[[";
