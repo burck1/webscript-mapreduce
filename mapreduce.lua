@@ -31,6 +31,7 @@ mapreduce.initiate = function (data)
   </head>
   <body>
     <button id="go" type="button" class="pure-button pure-button-primary">GO</button>
+    <pre id="result"></pre>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
     <script type="text/javascript">
     var map_url = "]]..storage["mapreduce:config:urls:map"]..[[";
@@ -61,13 +62,15 @@ mapreduce.initiate = function (data)
                 }).done(function(result_data) {
                   console.log(key2 + " reduce done");
                   if (!$.isEmptyObject(result_data)) {
+                    var result_data_str = JSON.stringify(result_data);
                     $.ajax({
                       method: "POST",
-                      data: JSON.stringify(result_data),
+                      data: result_data_str,
                       contentType: "text/plain",
                       processData: false
                     }).done(function(){
                       console.log("results sent");
+                      $("#result").html(result_data_str);
                     });
                   }
                 });
