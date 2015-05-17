@@ -70,13 +70,7 @@ mapreduce.initiate = function (data)
                       processData: false
                     }).done(function(){
                       console.log("results sent");
-                      var result_array = $.map(result_data, function(key3, value3) {
-                        return { key: key3, value: value3 }
-                      });
-                      result_array.sort(function(a, b) {
-                        return a.key > b.key;
-                      });
-                      $("#result").html(JSON.stringify(result_array));
+                      $("#result").html(JSON.stringify(result_data, undefined, 4));
                     });
                   }
                 });
