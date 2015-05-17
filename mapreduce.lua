@@ -49,7 +49,7 @@ mapreduce.initiate = function (data)
             processData: false,
             dataType: "json"
           }).done(function(reduce_data) {
-            console.log(key + " map done");
+            console.log("map: " + key);
             if (!$.isEmptyObject(reduce_data)) {
               $.each(reduce_data, function(key2, value2) {
                 $.ajax({
@@ -60,18 +60,23 @@ mapreduce.initiate = function (data)
                   processData: false,
                   dataType: "json"
                 }).done(function(result_data) {
-                  console.log(key2 + " reduce done");
+                  console.log("reduce: " + key2);
                   if (!$.isEmptyObject(result_data)) {
-                    var result_data_str = JSON.stringify(result_data, undefined, 4);
                     $.ajax({
                       method: "POST",
                       url: result_url,
-                      data: result_data_str,
+                      data: JSON.stringify(result_data),
                       contentType: "text/plain",
                       processData: false
                     }).done(function(){
                       console.log("results sent");
-                      $("#result").html(result_data_str);
+                      var result_array = $.map(result_data, function(key3, value3) {
+                        return { key: key3, value: value3 }
+                      });
+                      result_array.sort(function(a, b) {
+                        return a.key > b.key;
+                      });
+                      $("#result").html(JSON.stringify(result_array));
                     });
                   }
                 });
