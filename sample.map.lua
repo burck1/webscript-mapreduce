@@ -15,5 +15,3 @@ local counts = get_words_count(value)
 for word,count in pairs(counts) do
     mapreduce.emit(request, word, count)
 end
-
-return mapreduce.continue(request)

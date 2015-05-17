@@ -12,4 +12,3 @@ key = mapreduce.key(request)
 value = mapreduce.value(request)
 
 mapreduce.emit(request, key, sum(value))
-return mapreduce.continue(request)

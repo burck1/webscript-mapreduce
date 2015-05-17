@@ -127,37 +127,53 @@ mapreduce.emit = function (request, key, value)
     end
 end
 
-mapreduce.continue = function (request)
-    if string.find(storage["mapreduce:config:urls:map"], request.path) then
-        lease.acquire("mapreduce:data:maptotal")
-        local c = tonumber(storage["mapreduce:data:maptotal"]) + 1
-        storage["mapreduce:data:maptotal"] = c
-        lease.release("mapreduce:data:maptotal")
-        if c == tonumber(storage["mapreduce:data:mapcount"]) then
-            local groups = json.parse(storage["mapreduce:data:groups"])
-            storage["mapreduce:data:reducecount"] = tablelength(groups)
-            local groups_locations = {}
-            for k,v in pairs(groups) do
-                local data_location = "mapreduce:data:reduce:"..k
-                storage[data_location] = json.stringify(v)
-                groups_locations[k] = data_location
-            end
-            return json.stringify(groups_locations), {["Content-Type"]="application/json"}
-        else
-            return "{}", {["Content-Type"]="application/json"}
-        end
-    elseif string.find(storage["mapreduce:config:urls:reduce"], request.path) then
-        lease.acquire("mapreduce:data:reducetotal")
-        local c = tonumber(storage["mapreduce:data:reducetotal"]) + 1
-        storage["mapreduce:data:reducetotal"] = c
-        lease.release("mapreduce:data:reducetotal")
-        if c == tonumber(storage["mapreduce:data:reducecount"]) then
-            return "mapreduce:data:results", {["Content-Type"]="text/plain"}
-        else
-            return "", {["Content-Type"]="text/plain"}
-        end
+mapreduce.mapresults = function()
+    local groups = json.parse(storage["mapreduce:data:groups"])
+    storage["mapreduce:data:reducecount"] = tablelength(groups)
+    local groups_locations = {}
+    for k,v in pairs(groups) do
+        local data_location = "mapreduce:data:reduce:"..k
+        storage[data_location] = json.stringify(v)
+        groups_locations[k] = data_location
     end
+    return json.stringify(groups_locations), {["Content-Type"]="application/json"}
 end
+
+mapreduce.reduceresults = function()
+    return "mapreduce:data:results", {["Content-Type"]="text/plain"}
+end
+
+-- mapreduce.continue = function (request)
+--     if string.find(storage["mapreduce:config:urls:map"], request.path) then
+--         lease.acquire("mapreduce:data:maptotal")
+--         local c = tonumber(storage["mapreduce:data:maptotal"]) + 1
+--         storage["mapreduce:data:maptotal"] = c
+--         lease.release("mapreduce:data:maptotal")
+--         if c == tonumber(storage["mapreduce:data:mapcount"]) then
+--             local groups = json.parse(storage["mapreduce:data:groups"])
+--             storage["mapreduce:data:reducecount"] = tablelength(groups)
+--             local groups_locations = {}
+--             for k,v in pairs(groups) do
+--                 local data_location = "mapreduce:data:reduce:"..k
+--                 storage[data_location] = json.stringify(v)
+--                 groups_locations[k] = data_location
+--             end
+--             return json.stringify(groups_locations), {["Content-Type"]="application/json"}
+--         else
+--             return "{}", {["Content-Type"]="application/json"}
+--         end
+--     elseif string.find(storage["mapreduce:config:urls:reduce"], request.path) then
+--         lease.acquire("mapreduce:data:reducetotal")
+--         local c = tonumber(storage["mapreduce:data:reducetotal"]) + 1
+--         storage["mapreduce:data:reducetotal"] = c
+--         lease.release("mapreduce:data:reducetotal")
+--         if c == tonumber(storage["mapreduce:data:reducecount"]) then
+--             return "mapreduce:data:results", {["Content-Type"]="text/plain"}
+--         else
+--             return "", {["Content-Type"]="text/plain"}
+--         end
+--     end
+-- end
 
 mapreduce.key = function (request)
     return request.query.key
@@ -168,14 +184,11 @@ mapreduce.value = function (request)
         return storage[request.body]
     elseif string.find(storage["mapreduce:config:urls:reduce"], request.path) then
         return json.parse(storage[request.body])
+    elseif string.find(storage["mapreduce:config:urls:result"], request.path) then
+        return json.parse(storage[request.body])
     else
         return request.body
     end
 end
-
-mapreduce.result = function (request)
-    return json.parse(storage[request.body])
-end
-
 
 return mapreduce
