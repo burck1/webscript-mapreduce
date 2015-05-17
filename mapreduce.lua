@@ -110,7 +110,8 @@ mapreduce.html = function (initiate_url)
                 var d2 = $.Deferred();
                 reduce(initiate_data["links"]["reduce"], key2, value2, function() {
                   console.log("reduce: " + key2);
-                }, undefined, function() { d2.resolve(); });
+                  d2.resolve();
+                });
                 reduce_requests.push();
               });
               $.when.apply($, reduce_requests).done(function() {
