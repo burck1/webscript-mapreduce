@@ -8,10 +8,10 @@ local get_words_count = function (line)
     return counts
 end
 
-key = mapreduce.key(request)
-value = mapreduce.value(request)
+local key = mapreduce.key(request)
+local value = mapreduce.value(request)
 
-counts = get_words_count(value)
+local counts = get_words_count(value)
 for word,count in pairs(counts) do
     mapreduce.emit(request, word, count)
 end
