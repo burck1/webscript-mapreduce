@@ -24,17 +24,16 @@ mapreduce.initiate = function (data)
         data_html = data_html..'"'..k..'":"'..v..'",'
     end
 
-    local html = '
-<!DOCTYPE html>
+    local html = [[<!DOCTYPE html>
 <html>
   <body>
     <button id="go" type="button"></button>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
     <script type="text/javascript">
-    var map_url = "'..storage["mapreduce:config:urls:map"]..'";
-    var reduce_url = "'..storage["mapreduce:config:urls:reduce"]..'";
-    var result_url = "'..storage["mapreduce:config:urls:result"]..'";
-    var map_data = {'..data_html..'};
+    var map_url = "]]..storage["mapreduce:config:urls:map"]..[[";
+    var reduce_url = "]]..storage["mapreduce:config:urls:reduce"]..[[";
+    var result_url = "]]..storage["mapreduce:config:urls:result"]..[[";
+    var map_data = {]]..data_html..[[};
     $(function() {
       $("#go").click(function() {
         $.each(map_data, function(key, value) {
@@ -77,7 +76,7 @@ mapreduce.initiate = function (data)
     });
     </script>
   </body>
-</html>'
+</html>]]
     return html, {["Content-Type"]="text/html"}
 end
 
