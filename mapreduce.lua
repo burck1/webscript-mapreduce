@@ -26,7 +26,7 @@ mapreduce.html = function (initiate_url)
   </head>
   <body>
     <button id="go" type="button" class="pure-button pure-button-primary">GO</button>
-    <h2 id="result"></h2>
+    <pre id="result"></pre>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
     <script type="text/javascript">
     function initiate(url, done, fail, always) {
