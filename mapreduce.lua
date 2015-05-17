@@ -98,8 +98,6 @@ mapreduce.html = function (initiate_url)
           $.each(initiate_data["data"], function(key, value) {
             map_requests.push(map(initiate_data["links"]["map"], key, value, function(){
               console.log("map: " + key);
-            }, undefined, function(){
-              mapped[key] = true;
             }));
           });
           $.when.apply($, map_requests).done(function() {
@@ -108,8 +106,6 @@ mapreduce.html = function (initiate_url)
               $.each(reduce_data, function(key2, value2) {
                 reduce_requests.push(reduce(initiate_data["links"]["reduce"], key2, value2, function() {
                   console.log("reduce: " + key2);
-                }, undefined, function(){
-                  reduced[key2] = true;
                 }));
               });
               $.when.apply($, reduce_requests).done(function() {
