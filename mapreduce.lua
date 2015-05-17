@@ -30,8 +30,8 @@ mapreduce.html = function (initiate_url)
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
     <script type="text/javascript">
     function initiate(url, done, fail, always) {
-      fail = typeof fail !== 'undefined' ? fail : function(jqXHR, textStatus){console.log("Error: initiate: "+textStatus);};
-      always = typeof always !== 'undefined' ? always : function(){};
+      fail = typeof fail !== "undefined" ? fail : function(jqXHR, textStatus){console.log("Error: initiate: "+textStatus);};
+      always = typeof always !== "undefined" ? always : function(){};
       $.ajax({
         method: "GET",
         url: url,
@@ -39,20 +39,19 @@ mapreduce.html = function (initiate_url)
       }).done(done).fail(fail).always(always);
     }
     function map(url, key, value, done, fail, always) {
-      fail = typeof fail !== 'undefined' ? fail : function(jqXHR, textStatus){console.log("Error: map: "+key+": "+textStatus);};
-      always = typeof always !== 'undefined' ? always : function(){};
+      fail = typeof fail !== "undefined" ? fail : function(jqXHR, textStatus){console.log("Error: map: "+key+": "+textStatus);};
+      always = typeof always !== "undefined" ? always : function(){};
       $.ajax({
         method: "POST",
         url: url + "?key=" + key,
         data: value,
         contentType: "text/plain",
-        processData: false,
-        dataType: "json"
+        processData: false
       }).done(done).fail(fail).always(always);
     }
     function mapresults(url, done, fail, always) {
-      fail = typeof fail !== 'undefined' ? fail : function(jqXHR, textStatus){console.log("Error: mapresults: "+textStatus);};
-      always = typeof always !== 'undefined' ? always : function(){};
+      fail = typeof fail !== "undefined" ? fail : function(jqXHR, textStatus){console.log("Error: mapresults: "+textStatus);};
+      always = typeof always !== "undefined" ? always : function(){};
       $.ajax({
         method: "GET",
         url: url,
@@ -60,20 +59,19 @@ mapreduce.html = function (initiate_url)
       }).done(done).fail(fail).always(always);
     }
     function reduce(url, key, value, done, fail, always) {
-      fail = typeof fail !== 'undefined' ? fail : function(jqXHR, textStatus){console.log("Error: reduce: "+key+": "+textStatus);};
-      always = typeof always !== 'undefined' ? always : function(){};
+      fail = typeof fail !== "undefined" ? fail : function(jqXHR, textStatus){console.log("Error: reduce: "+key+": "+textStatus);};
+      always = typeof always !== "undefined" ? always : function(){};
       $.ajax({
         method: "POST",
         url: url + "?key=" + key,
         data: value,
         contentType: "text/plain",
-        processData: false,
-        dataType: "text"
+        processData: false
       }).done(done).fail(fail).always(always);
     }
     function reduceresults(url, done, fail, always) {
-      fail = typeof fail !== 'undefined' ? fail : function(jqXHR, textStatus){console.log("Error: reduceresults: "+textStatus);};
-      always = typeof always !== 'undefined' ? always : function(){};
+      fail = typeof fail !== "undefined" ? fail : function(jqXHR, textStatus){console.log("Error: reduceresults: "+textStatus);};
+      always = typeof always !== "undefined" ? always : function(){};
       $.ajax({
         method: "GET",
         url: url,
@@ -81,8 +79,8 @@ mapreduce.html = function (initiate_url)
       }).done(done).fail(fail).always(always);
     }
     function result(url, data, done, fail, always) {
-      fail = typeof fail !== 'undefined' ? fail : function(jqXHR, textStatus){console.log("Error: result: "+textStatus);};
-      always = typeof always !== 'undefined' ? always : function(){};
+      fail = typeof fail !== "undefined" ? fail : function(jqXHR, textStatus){console.log("Error: result: "+textStatus);};
+      always = typeof always !== "undefined" ? always : function(){};
       $.ajax({
         method: "POST",
         url: url,
