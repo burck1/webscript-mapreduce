@@ -100,7 +100,7 @@ mapreduce.html = function (initiate_url)
               console.log("map: " + key);
             }));
           });
-          $.when.apply($, map_requests).always(function() {
+          function allMapsDone() {
             mapresults(initiate_data["links"]["mapresults"], function(reduce_data) {
               var reduce_requests = Array();
               $.each(reduce_data, function(key2, value2) {
@@ -108,16 +108,18 @@ mapreduce.html = function (initiate_url)
                   console.log("reduce: " + key2);
                 }));
               });
-              $.when.apply($, reduce_requests).always(function() {
+              function allReducesDone() {
                 reduceresults(initiate_data["links"]["reduceresults"], function(result_data) {
                   result(initiate_data["links"]["result"], result_data, function(results){
                     console.log("results sent");
                     $("#result").html(JSON.stringify(results, undefined, 4));
                   });
                 });
-              });
+              }
+              $.when.apply($, reduce_requests).done(allReducesDone).fail(allReducesDone);
             });
-          });
+          }
+          $.when.apply($, map_requests).done(allMapsDone).fail(allMapsDone);
         });
       });
     });
